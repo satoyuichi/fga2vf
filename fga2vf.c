@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
 #define LINE_MAX (1024)
 
@@ -24,9 +26,17 @@ int main (int argc, char** argv)
 	char line[LINE_MAX];
 	unsigned long volume_size;
 	int stride = 3;
+	int optIndex = 1;
+	float x, y, z;
+
+	if (strcmp ("-d", argv[1]) == 0) {
+		sHeader.four_cc[3] = 'F';
+		stride = 1;
+		optIndex++;
+	}
 	
-	pInFD = fopen (argv[1], "r");
-	pOutFD = fopen (argv[2], "wb");
+	pInFD = fopen (argv[optIndex++], "r");
+	pOutFD = fopen (argv[optIndex++], "wb");
 
 	fgets (line, LINE_MAX, pInFD);
 	sscanf (line, "%hd,%hd,%hd,", &sHeader.x, &sHeader.y, &sHeader.z);
@@ -37,10 +47,15 @@ int main (int argc, char** argv)
 	pfData = (float*)malloc (sizeof(float) * volume_size * stride);
 
 	for (int i = 0; fgets (line, LINE_MAX, pInFD); i++) {
-		sscanf (line, "%f,%f,%f,",
-				pfData + i * 3 + 0,
-				pfData + i * 3 + 1,
-				pfData + i * 3 + 2);
+		sscanf (line, "%f,%f,%f,", &x, &y, &z);
+		if (stride == 1) {
+			*(pfData + i) = (float)sqrt (x * x + y * y + z * z);
+		}
+		else {
+			*(pfData + i * 3 + 0) = x;
+			*(pfData + i * 3 + 1) = y;
+			*(pfData + i * 3 + 2) = z;
+		}
 		/* printf ("%f, %f, %f\n", */
 		/* 		*(pfData + i * 3 + 0), */
 		/* 		*(pfData + i * 3 + 1), */
